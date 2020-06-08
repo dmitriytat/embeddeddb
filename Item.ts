@@ -10,9 +10,6 @@ export class Item implements IItem {
     public updatedAt?: number;
 
     constructor(data: Partial<IItem>) {
-        Object.keys(data).forEach((key) => {
-            // @ts-ignore
-            this[key] = data[key]
-        });
+        Object.assign(this, data);
     }
 }

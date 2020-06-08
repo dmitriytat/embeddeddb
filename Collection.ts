@@ -1,12 +1,14 @@
 import {uuid} from "./dep.ts";
-import {Item, IItem} from "./Item.ts";
+import {IItem} from "./Item.ts";
 
-export class Collection<T> {
+type Constructor<T> = new (...args: any[]) => T;
+
+export class Collection<T extends IItem> {
     private readonly file: string;
-    private items: IItem<T>[] = [];
+    private items: T[] = [];
 
-    constructor(name: string) {
-        this.file = name + '.json';
+    constructor(private creator: Constructor<T>, name?: string) {
+        this.file = (name || creator.name) + '.json';
     }
 
     async read() {
@@ -25,15 +27,21 @@ export class Collection<T> {
         await Deno.writeTextFile(this.file, data);
     }
 
-    async save(item: Item<T>) {
+    async save(item: T): Promise<T> {
         await this.read();
 
         const itemIndex = this.items.findIndex(itm => itm.id === item.id);
 
-        if (itemIndex === -1) {
-            this.items = this.items.concat(item.serialise());
+        if (!item.createdAt) {
+            item.createdAt = Date.now();
         } else {
-            this.items[itemIndex] = item.serialise();
+            item.updatedAt = Date.now();
+        }
+
+        if (itemIndex === -1) {
+            this.items = this.items.concat(item);
+        } else {
+            this.items[itemIndex] = item;
         }
 
         await this.write();
@@ -45,18 +53,19 @@ export class Collection<T> {
         return uuid.generate();
     }
 
-    create(data: T) {
-        return new Item<T>({id: this.genId(), data}, this);
+    create(data?: T): T {
+        const item = new this.creator({ id: this.genId() });
+        return Object.assign(item, data);
     }
 
-    async findById(id: Item<T>['id']): Promise<Item<T> | undefined> {
+    async findById(id: IItem['id']): Promise<T | undefined> {
         await this.read();
         const item = this.items.find(itm => itm.id === id);
 
-        return item && new Item<T>(item, this);
+        return item && new this.creator(item);
     }
 
-    async removeById(id: Item<T>['id']): Promise<number> {
+    async removeById(id: IItem['id']): Promise<number> {
         await this.read();
         const oldCount = this.items.length;
         this.items = this.items.filter(item => item.id !== id);
@@ -67,15 +76,15 @@ export class Collection<T> {
         return oldCount - newCount;
     }
 
-    async find(condition: Partial<T>): Promise<Item<T>[]> {
+    async find(condition: Partial<T>): Promise<T[]> {
         await this.read();
 
         return this.items.filter(item => {
             return Object.keys(condition).every((key: unknown) => {
-                return item.data[key as keyof T] === condition[key as keyof T];
+                return item[key as keyof T] === condition[key as keyof T];
             });
         })
-            .map((item: IItem<T>) => new Item<T>(item, this));
+            .map((item: T) => new this.creator(item));
     }
 
     async remove(condition: Partial<T>): Promise<number> {
@@ -84,7 +93,7 @@ export class Collection<T> {
         const oldCount = this.items.length;
         this.items = this.items.filter(item => {
             return Object.keys(condition).some((key: unknown) => {
-                return item.data[key as keyof T] !== condition[key as keyof T];
+                return item[key as keyof T] !== condition[key as keyof T];
             });
         });
         const newCount = this.items.length;
@@ -103,7 +112,7 @@ export class Collection<T> {
 
         return this.items.filter(item => {
             return Object.keys(condition).every((key: unknown) => {
-                return item.data[key as keyof T] === condition[key as keyof T];
+                return item[key as keyof T] === condition[key as keyof T];
             });
         }).length;
     }

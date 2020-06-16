@@ -24,7 +24,7 @@ class Task extends Item implements ITask {
 
 const TaskCollection = new Collection<ITask, Task>(Task);
 
-const task = await TaskCollection.create({ title: 'improve file structure' });
+const task = await TaskCollection.create({ title: "improve file structure" });
 await TaskCollection.save(task);
 console.log(`created`, task);
 

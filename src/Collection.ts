@@ -1,30 +1,24 @@
 import { uuid } from "../dep.ts";
 import { IItem, Item } from "./Item.ts";
+import { DataBase } from "./DataBase.ts";
+import { JSONFileDataBase } from "./JSONFileDataBase.ts";
 
 type Constructor<T> = new (...args: any[]) => T;
 
 export class Collection<T extends IItem, K extends Item> {
-  private readonly file: string;
   private items: T[] = [];
 
-  constructor(private creator: Constructor<K>, name?: string) {
-    this.file = (name || creator.name) + ".json";
-  }
+  constructor(
+    private creator: Constructor<K>,
+    private db: DataBase<T> = new JSONFileDataBase(creator.name + ".json"),
+  ) {}
 
   async read() {
-    let collection = [];
-    try {
-      const data = await Deno.readTextFile(this.file);
-      collection = JSON.parse(data);
-    } catch (e) {
-    } finally {
-      this.items = collection;
-    }
+    this.items = await this.db.read();
   }
 
   async write() {
-    const data = JSON.stringify(this.items);
-    await Deno.writeTextFile(this.file, data);
+    await this.db.write(this.items);
   }
 
   async save(item: T): Promise<T> {

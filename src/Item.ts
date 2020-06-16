@@ -13,7 +13,7 @@ export class Item implements IItem {
     this.assign(data);
   }
 
-  assign(data?: object) {
+  assign(data?: Partial<IItem>) {
     Object.assign(this, data);
   }
 }

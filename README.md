@@ -15,13 +15,13 @@ class Task extends Item implements ITask {}
 
 const TaskCollection = new Collection<ITask>(Task);
 
-const task = await TaskCollection.create({ title: "Create one" });
+const task =  TaskCollection.create({ title: "Create one" });
 
-await TaskCollection.save(task);
+ TaskCollection.save(task);
 
 console.log(`created`, task);
 
-const taskOne = await TaskCollection.findById(task.id);
+const taskOne =  TaskCollection.findById(task.id);
 
 if (taskOne) {
   console.log(`founded`, taskOne);
@@ -30,7 +30,7 @@ if (taskOne) {
   Deno.exit();
 }
 
-const removeCount = await TaskCollection.remove(taskOne);
+const removeCount =  TaskCollection.remove(taskOne);
 
 console.log(`removed: ${removeCount}`);
 ```

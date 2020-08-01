@@ -14,13 +14,13 @@ const task1 = TaskCollection.create({ title: "Create one" });
 const task2 = TaskCollection.create({ title: "Create another" });
 const task3 = TaskCollection.create();
 
-await TaskCollection.save(task1);
-await TaskCollection.save(task2);
-await TaskCollection.save(task3);
+TaskCollection.save(task1);
+TaskCollection.save(task2);
+TaskCollection.save(task3);
 
-const taskOne = await TaskCollection.findById(task1.id);
-const [taskTwo] = await TaskCollection.find({ title: task2.title });
-const taskThree = await TaskCollection.findOne(task3);
+const taskOne = TaskCollection.findById(task1.id);
+const [taskTwo] = TaskCollection.find({ title: task2.title });
+const taskThree = TaskCollection.findOne(task3);
 
 if (!taskOne || !taskTwo) {
   Deno.exit();
@@ -33,19 +33,19 @@ console.log({
 });
 
 taskOne.title = "Edit one";
-await TaskCollection.save(taskOne);
+TaskCollection.save(taskOne);
 
 console.log({
   taskOne: taskOne,
 });
 
 console.log({
-  count: await TaskCollection.count(),
+  count: TaskCollection.count(),
 });
 
-const removeCountOne = await TaskCollection.removeById(taskOne.id);
-const removeCountTwo = await TaskCollection.remove({ title: "Create another" });
-const removeCountThree = await TaskCollection.remove(task3);
+const removeCountOne = TaskCollection.removeById(taskOne.id);
+const removeCountTwo = TaskCollection.remove({ title: "Create another" });
+const removeCountThree = TaskCollection.remove(task3);
 
 console.log({
   removeCountOne,
@@ -54,5 +54,5 @@ console.log({
 });
 
 console.log({
-  count: await TaskCollection.count(),
+  count: TaskCollection.count(),
 });

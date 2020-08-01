@@ -1,4 +1,4 @@
 export interface DataBase<T> {
-  read(): Promise<T[]>;
-  write(items: T[]): Promise<void>;
+  read(): T[];
+  write(items: T[]): void;
 }

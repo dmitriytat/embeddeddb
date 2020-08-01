@@ -2,8 +2,9 @@ import { uuid } from "../dep.ts";
 import { IItem, Item } from "./Item.ts";
 import { DataBase } from "./DataBase.ts";
 import { JSONFileDataBase } from "./JSONFileDataBase.ts";
+import { Context } from "./Context.ts";
 
-type Constructor<T> = new (...args: any[]) => T;
+export type Constructor<T> = new (...args: any[]) => T;
 
 export class Collection<T extends IItem, K extends Item> {
   private items: T[] = [];
@@ -11,18 +12,19 @@ export class Collection<T extends IItem, K extends Item> {
   constructor(
     private creator: Constructor<K>,
     private db: DataBase<T> = new JSONFileDataBase(creator.name + ".json"),
+    private context?: Context,
   ) {}
 
-  async read() {
-    this.items = await this.db.read();
+  read() {
+    this.items = this.db.read();
   }
 
-  async write() {
-    await this.db.write(this.items);
+  write() {
+    this.db.write(this.items);
   }
 
-  async save(item: T): Promise<T> {
-    await this.read();
+  save(item: T): T {
+    this.read();
 
     const itemIndex = this.items.findIndex((itm) => itm.id === item.id);
 
@@ -38,7 +40,7 @@ export class Collection<T extends IItem, K extends Item> {
       this.items[itemIndex] = item;
     }
 
-    await this.write();
+    this.write();
 
     return item;
   }
@@ -48,33 +50,33 @@ export class Collection<T extends IItem, K extends Item> {
   }
 
   create(data?: T): K {
-    const item = new this.creator({ id: this.genId() });
+    const item = new this.creator({ id: this.genId() }, this.context);
 
     item.assign(data);
 
     return item;
   }
 
-  async findById(id: IItem["id"]): Promise<K | null> {
-    await this.read();
+  findById(id: IItem["id"]): K | null {
+    this.read();
     const item = this.items.find((itm) => itm.id === id);
 
     return item ? this.create(item) : null;
   }
 
-  async removeById(id: IItem["id"]): Promise<number> {
-    await this.read();
+  removeById(id: IItem["id"]): number {
+    this.read();
     const oldCount = this.items.length;
     this.items = this.items.filter((item) => item.id !== id);
     const newCount = this.items.length;
 
-    await this.write();
+    this.write();
 
     return oldCount - newCount;
   }
 
-  async findOne(condition: Partial<T>): Promise<K | null> {
-    await this.read();
+  findOne(condition: Partial<T>): K | null {
+    this.read();
 
     const itm = this.items.find((item) => {
       return Object.keys(condition).every((key: unknown) => {
@@ -85,8 +87,8 @@ export class Collection<T extends IItem, K extends Item> {
     return itm ? this.create(itm) : null;
   }
 
-  async find(condition: Partial<T>): Promise<K[]> {
-    await this.read();
+  find(condition: Partial<T>): K[] {
+    this.read();
 
     return this.items.filter((item) => {
       return Object.keys(condition).every((key: unknown) => {
@@ -96,8 +98,8 @@ export class Collection<T extends IItem, K extends Item> {
       .map((item: T) => this.create(item));
   }
 
-  async remove(condition: Partial<T>): Promise<number> {
-    await this.read();
+  remove(condition: Partial<T>): number {
+    this.read();
 
     const oldCount = this.items.length;
     this.items = this.items.filter((item) => {
@@ -107,13 +109,13 @@ export class Collection<T extends IItem, K extends Item> {
     });
     const newCount = this.items.length;
 
-    await this.write();
+    this.write();
 
     return oldCount - newCount;
   }
 
-  async count(condition?: Partial<T>): Promise<number> {
-    await this.read();
+  count(condition?: Partial<T>): number {
+    this.read();
 
     if (!condition) {
       return this.items.length;

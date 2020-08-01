@@ -1,19 +1,20 @@
 import { DataBase } from "./DataBase.ts";
+import { existsSync } from "../dep.ts";
 
 export class JSONFileDataBase<T> implements DataBase<T> {
-  constructor(private file: string) {}
-
-  async read(): Promise<T[]> {
-    try {
-      const data = await Deno.readTextFile(this.file);
-      return JSON.parse(data);
-    } catch (e) {
-      throw new Error(`Can\'t read file: ${this.file}`);
+  constructor(private file: string) {
+    if (!existsSync(file)) {
+      this.write([]);
     }
   }
 
-  async write(items: T[]): Promise<void> {
+  read(): T[] {
+    const data = Deno.readTextFileSync(this.file);
+    return JSON.parse(data);
+  }
+
+  write(items: T[]): void {
     const data = JSON.stringify(items);
-    await Deno.writeTextFile(this.file, data);
+    Deno.writeTextFileSync(this.file, data);
   }
 }

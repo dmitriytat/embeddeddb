@@ -1,5 +1,6 @@
 import { uuid } from "../dep.ts";
-import { IItem, Item } from "./Item.ts";
+import { Item } from "./Item.ts";
+import type { IItem } from "./Item.ts";
 import { DataBase } from "./DataBase.ts";
 import { JSONFileDataBase } from "./JSONFileDataBase.ts";
 import { Context } from "./Context.ts";

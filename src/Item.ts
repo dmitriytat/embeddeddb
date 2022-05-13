@@ -1,5 +1,5 @@
 import { Context } from "./Context.ts";
-import { Constructor } from "./Collection.ts";
+import type { Constructor } from "./Collection.ts";
 
 export interface IItem {
   id?: string;
